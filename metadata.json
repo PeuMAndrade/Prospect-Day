@@ -1,0 +1,6 @@
+{
+  "name": "Prospect Day Live Dashboard",
+  "description": "Dashboard de gamificação em tempo real para eventos de vendas, com ranking dinâmico e integração com Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
