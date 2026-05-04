@@ -57,7 +57,10 @@ export function useSheetData(sheetUrl?: string) {
   }, []);
 
   const buildDashboardData = useCallback((participants: Participant[], goal = DEFAULT_GOAL) => {
-    const totalMeetings = participants.reduce((acc, curr) => acc + curr.reunioes_marcadas, 0);
+    const totalMeetings = participants.reduce(
+      (acc, curr) => acc + curr.reunioes_marcadas + (curr.reunioes_marcadas_nucleos_diferentes || 0),
+      0,
+    );
 
     return {
       participants,
@@ -88,15 +91,16 @@ export function useSheetData(sheetUrl?: string) {
         ].sort((a, b) => b.pontuacao - a.pontuacao)
          .map((p, i) => ({ ...p, rank: i + 1 }));
 
-        const totalMeetings = mockData.reduce((acc, curr) => acc + curr.reunioes_marcadas, 0);
-
         if (requestId !== activeRequestIdRef.current) {
           return;
         }
 
         setData({
           participants: mockData,
-          totalMeetings,
+          totalMeetings: mockData.reduce(
+            (acc, curr) => acc + curr.reunioes_marcadas + (curr.reunioes_marcadas_nucleos_diferentes || 0),
+            0,
+          ),
           goal: DEFAULT_GOAL,
           lastUpdated: new Date(),
         });
@@ -117,7 +121,8 @@ export function useSheetData(sheetUrl?: string) {
         return;
       }
 
-      setData(buildDashboardData(participants, payload.goal ?? DEFAULT_GOAL));
+      // Mantemos a meta coletiva fixa no app para evitar divergencia com payload remoto.
+      setData(buildDashboardData(participants, DEFAULT_GOAL));
       setLoading(false);
     } catch (err) {
       if (requestId !== activeRequestIdRef.current) {

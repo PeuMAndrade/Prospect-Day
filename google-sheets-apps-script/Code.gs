@@ -1,5 +1,5 @@
 const SHEET_NAME = 'Dados';
-const DEFAULT_GOAL = 100;
+const DEFAULT_GOAL = 30;
 
 function doGet(e) {
   const payload = buildPayloadFromSheet();
@@ -53,7 +53,10 @@ function buildPayloadFromSheet() {
     rank: index + 1,
   }));
 
-  const totalMeetings = participants.reduce((acc, curr) => acc + curr.reunioes_marcadas, 0);
+  const totalMeetings = participants.reduce(
+    (acc, curr) => acc + curr.reunioes_marcadas + (curr.reunioes_marcadas_nucleos_diferentes || 0),
+    0,
+  );
 
   return {
     participants,
@@ -92,4 +95,14 @@ function rowToObject(headers, row) {
     acc[header] = row[index];
     return acc;
   }, {});
+}
+
+function escapeCsv(value) {
+  const text = String(value ?? '');
+
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
 }
