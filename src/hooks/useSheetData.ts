@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { DashboardData, Participant } from '../types';
 
 const REFRESH_INTERVAL = 5000; // 5 segundos
-const DEFAULT_GOAL = 20; // Meta padrão caso não definida
+const DEFAULT_GOAL = 30; // Meta padrão caso não definida
 
 type ParticipantRow = {
   id?: string | number;
