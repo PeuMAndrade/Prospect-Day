@@ -1,6 +1,11 @@
 const SHEET_NAME = 'Dados';
 const DEFAULT_GOAL = 30;
 
+// Colunas fixas (0-based): O=14 (nome), P=15 (pontuacao), Q=16 (reunioes)
+const COL_NOME = 14;
+const COL_PONTUACAO = 15;
+const COL_REUNIOES = 16;
+
 function doGet(e) {
   const payload = buildPayloadFromSheet();
   const callback = e && e.parameter && e.parameter.callback;
@@ -34,27 +39,30 @@ function buildPayloadFromSheet() {
     };
   }
 
-  const headers = values[0].map(value => String(value).trim().toLowerCase());
-  const rows = values.slice(1).filter(row => row.some(cell => cell !== ''));
+  // Pula a linha de cabeçalho (linha 1) e processa as demais
+  const dataRows = values.slice(1).filter(row => row.some(cell => cell !== ''));
 
-  const participants = rows.map((row, index) => {
-    const record = rowToObject(headers, row);
+  const participants = dataRows
+    .map((row, index) => {
+      const nome = String(row[COL_NOME] || '').trim();
+      const pontuacao = Number(row[COL_PONTUACAO]) || 0;
+      const reunioes = Number(row[COL_REUNIOES]) || 0;
 
-    return {
-      id: String(record.id || index + 1),
-      nome: String(record.nome || 'Sem Nome'),
-      pontuacao: Number(record.pontuacao) || 0,
-      reunioes_marcadas: Number(record.reunioes_marcadas) || 0,
-      reunioes_marcadas_nucleos_diferentes: Number(record.reunioes_marcadas_nucleos_diferentes) || 0,
-      ligacoes_atendidas: Number(record.ligacoes_atendidas) || 0,
-    };
-  }).sort((a, b) => b.pontuacao - a.pontuacao).map((participant, index) => ({
-    ...participant,
-    rank: index + 1,
-  }));
+      return {
+        id: String(index + 1),
+        nome: nome || 'Sem Nome',
+        pontuacao: pontuacao,
+        reunioes_marcadas: reunioes,
+      };
+    })
+    .sort((a, b) => b.pontuacao - a.pontuacao)
+    .map((participant, index) => ({
+      ...participant,
+      rank: index + 1,
+    }));
 
   const totalMeetings = participants.reduce(
-    (acc, curr) => acc + curr.reunioes_marcadas + (curr.reunioes_marcadas_nucleos_diferentes || 0),
+    (acc, curr) => acc + curr.reunioes_marcadas,
     0,
   );
 
@@ -84,17 +92,6 @@ function findDataSheet() {
   }
 
   return null;
-}
-
-function rowToObject(headers, row) {
-  return headers.reduce((acc, header, index) => {
-    if (!header) {
-      return acc;
-    }
-
-    acc[header] = row[index];
-    return acc;
-  }, {});
 }
 
 function escapeCsv(value) {
